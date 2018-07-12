@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+ <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+ <style>
+  body {
+   font-family: Verdana;
+  }
+  h1, h2, h3 {
+   color: darkblue;
+  }
+  .rating-circle {
+   height: 2em;
+   width: 2em;
+   border: .1em solid black;
+   border-radius: 1.1em;
+   display: inline-block;
+   margin: 0;
+   padding: .1em;
+  }
+
+  .rating-hover {
+   background-color: yellow;
+  }
+
+  .rating-chosen {
+   background-color: green;
+  }
+ </style>
+</head>
+<body>
+ <h1>Contoso Web Developer Conference</h1>
+ <h2>Finding elements using jQuery</h2>
+ <div>This session is about identifying elements using jQuery methods and selectors.</div>
+ <h3>Rate this session</h3>
+ <div id="rating-container" max-value="5"></div>
+
+ <div>
+    <label for="max-value">Enter max value:</label>
+    <input type="text" id="max-value" />
+    <button type="button" id="update-max-value">Update max value</button>
+</div>
+<button type="button" id="save-rating">Save rating</button>
+<div id="output"></div>
+
+ <script src="js/jquery.min.js"></script>
+
+ <script>
+
+     $(function(){
+
+         var maxVal = $('#rating-container').attr('max-value');
+
+         $('#update-max-value').on('click', function(){
+             maxVal = $('#max-value').val();
+             $('#rating-container').empty().attr('max-value', maxVal);
+
+             createCircle(maxVal);
+
+         });
+         
+         $('#rating-container').ready(function(){
+            $(this).empty();
+            createCircle(maxVal);
+         });
+
+         
+         $(document).delegate('.rating-circle', 'mouseenter', function(){
+            var index = $('#rating-container').children().index($(this));
+
+            var curCircle =  $('#rating-container').children().get(index);
+
+            $(curCircle).nextAll().removeClass('highlight');
+            $(curCircle).addClass('highlight');
+            $(curCircle).prevAll().addClass('highlight');
+
+            $('#rating-container').find('.highlight').addClass('rating-hover');
+
+            $(this).mouseout(function(){
+                $('#rating-container').find('.highlight').removeClass('rating-hover');
+            });
+
+            $(this).click(function(){
+                $(this).nextAll().removeClass('rating-chosen');
+                $('#rating-container').find('.highlight').addClass('rating-chosen');
+            });
+           
+        });
+
+        function createCircle(num){
+            for(i = 0; i < num; i++){
+                $('#rating-container').append('<div class="rating-circle"></div>');
+            }
+        }
+
+        $("#save-rating").on('click', function(){
+            maxVal = $('#rating-container').attr('max-value');
+            var rated = $('#rating-container').children('.rating-chosen');
+            var val = rated.length;
+            var result = new Object();
+            result.value = val;
+            result.maxValue = maxVal;
+
+            $.post(
+                'http://jquery-edx.azurewebsites.net/api/Rating',
+                result
+            ).done(
+                function(data){
+                    $('#output').text(data.message);
+                }
+            );
+        });
+
+     });
+        
+ </script>
+</body>
+</html>
